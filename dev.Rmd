@@ -1,0 +1,96 @@
+---
+title: "Dev"
+author: "Uli Kaulfuß"
+date: "31 August 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load("data/testDF.Rda")
+
+library(tibble)
+
+source("helper.R")
+
+library(dplyr)
+
+df_pred_data <- testDF
+
+
+```
+
+```{r}
+
+
+
+df_pred_data$date <- as.POSIXct(df_pred_data$date)
+
+df_pred_data$price <- df_pred_data$GSPC.Close
+
+d_a <- df_pred_data[df_pred_data$DataType == 'actuals',]
+d_p <- df_pred_data[df_pred_data$DataType == 'prediction',]
+
+p <- plot_ly(d_a, x = ~date, y = ~price, name = 'Actuals', type = 'scatter', mode = 'lines', source = "subset") %>%
+      add_trace(data=d_p,  x = ~date, y = ~price,  name = 'Prediction', mode = 'lines', line = list(color = 'rgb(205, 12, 24)', width = 1.3, dash = 'dash'))
+  p
+```
+
+```{r}
+
+ticker ="APPL"
+
+xts_d <- getSymbols(ticker, auto.assign = FALSE)
+
+save(xts_d, file="data/HEI.DE.Rda")
+
+
+df_xts <- convert_xts_to_df(xts_d)
+
+head(d)
+
+```
+
+```{r}
+
+  
+  # PLACEHOLDER for prediction function based off an XTS object
+  
+  out <- xts_d
+  
+  out <- convert_xts_to_df(out, ticker)
+  
+  l <- round(nrow(xts_d)*0.8)
+  out[l:nrow(xts_d),]$DataType = "prediction"
+  out
+  
+
+```
+
+
+
+
+
+```{r}
+
+out <- xts_d
+
+
+
+out <- convert_xts_to_df(out, ticker)
+fake <- rnorm(nrow(out), mean = mean(out$Close), sd=sd(out$Close))
+
+out$Close <- fake
+
+l <- round(nrow(xts_d)*0.8)
+out[l:nrow(xts_d),]$DataType = "prediction"
+out
+```
+
+
+
+
+
+
+
+

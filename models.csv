@@ -1,4 +1,6 @@
 Ticker,ModelType,ModelPath,ModelAccuracyMetric,ModelAccuracyMetricFormat,ModelAccuracy
-APPL,RandomForest,APPL_RANDFOR.Rdata,MAPE,perc,0.12
+APPL,RF,APPL_RANDFOR.Rdata,MAPE,perc,0.12
 GOOGL,SVM,APPL_RANDFOR.Rdata,MAPE,perc,0.54
-SIEGY,N.BN,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
+SIEGY,NB,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
+HEI.DE,NB,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
+DAIM,SVM,APPL_RANDFOR.Rdata,MAPE,perc,0.2321

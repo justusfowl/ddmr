@@ -1,5 +1,8 @@
 library(shinydashboard)
 library(plotly)
+library(quantmod)
+
+source("config.R")
 
 dashboardPage(
   dashboardHeader(title = "Stock Prediction"),
@@ -7,7 +10,17 @@ dashboardPage(
     sidebarMenu(
 
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-      menuItem("Settings", tabName = "settings", icon = icon("gear")), 
+      selectInput("predictTicker", h4("TICKER:"),
+                  choices = ticker_choices),
+      dateRangeInput("forecastingDates", h4("FORECASTING PERIOD:")),
+      #checkboxInput("predSelectRecommendedModel","Use best performing model (recommended)", value=TRUE),
+      radioButtons("modelTypeSelect", h4("MODEL SELECTION:"),
+                   c("Auto (best performing)" = "AUTO",
+                     "Random Forest" = "RF",
+                     "SVM" = "SVM",
+                     "NB" = "NB")),
+      
+      # menuItem("Settings", tabName = "settings", icon = icon("gear")), 
       menuItem("Evaluation", tabName = "eval", icon = icon("search"))
       
     )
@@ -25,7 +38,7 @@ dashboardPage(
               ),
              
               fluidRow(
-                box(width=12, plotlyOutput("predictChart"))
+                box(width=12, plotlyOutput("predictChartLy"))
               ), 
               
               fluidRow(
@@ -35,34 +48,6 @@ dashboardPage(
       
       # Second tab content
       tabItem(tabName = "settings",
-              fluidRow(
-                box(width=12,
-                  selectInput("predictTicker", h3("TICKER:"),
-                              c("APPLE" = "APPL",
-                                "GOOGLE" = "GOOGL",
-                                "SIEMENS" = "SIEGY"))
-                )
-              ),
-              fluidRow(
-                box(width=12,
-                    dateRangeInput("dates", h3("FORECASTING PERIOD:"))
-                )
-              ),
-              fluidRow(
-                box(width=12,
-                    h3("FORECASTING PERIOD:"),
-                    checkboxInput("predSelectRecommendedModel","Use best performing model (recommended)")
-                )
-              ),
-              fluidRow(
-                box(width=12,
-                    radioButtons("modelTypeSelect", "manual selection",
-                                c("Random Forest" = "RF",
-                                  "SVM" = "SVM",
-                                  "NB" = "NB",
-                                  "Moving averages" = "MA"))
-                )
-              ), 
               menuItem("Predict", tabName = "dashboard", icon = icon("dashboard"))
       ),
       tabItem(tabName = "eval",
@@ -74,10 +59,7 @@ dashboardPage(
               ),
               h2("DATA FOUNDATION"), 
               fluidRow(
-                box(width=3, selectInput("modEvalTicker", "TICKER:",
-                                         c("APPLE" = "APPL",
-                                           "GOOGLE" = "GOOGL",
-                                           "SIEMENS" = "SIEGY")))
+                box(width=3, selectInput("modEvalTicker", "TICKER:", choices=ticker_choices))
               ),
               fluidRow(
                 box( width=8,
