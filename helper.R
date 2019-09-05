@@ -1,3 +1,5 @@
+library(tibble)
+
 cols_time_series_symbols_df <- c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted")
 cols_time_series_symbols_xts <- c("Open", "High", "Low", "Close", "Volume", "Adjusted")
 
