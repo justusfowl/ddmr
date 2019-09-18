@@ -13,12 +13,80 @@ library(tibble)
 
 source("helper.R")
 
+library(quantmod)
+library(gbm)
 library(dplyr)
+library(plotly)
+library(lubridate)
+library(stringr)
+library(randomForest)
+library(e1071)
+library(fs)
+
 
 df_pred_data <- testDF
+# 
+# load("models/Amazon/Amazon_GBM.rda")
+# load("models/Amazon/Amazon_RF.rda")
+# load("models/Amazon/Amazon_SVM.rda")
+# 
+# Amazon_GBM <- GBM_model_predict
+# Amazon_RF <- RF_model_predict
+# Amazon_SVM <- SVM_model_predict
+# 
+# load("models/Apple/Apple_GBM.rda")
+# load("models/Apple/Apple_RF.rda")
+# load("models/Apple/Apple_SVM.rda")
+# 
+# Apple_GBM <- GBM_model_predict
+# Apple_RF <- RF_model_predict
+# Apple_SVM <- SVM_model_predict
+# 
+# load("models/Boeing/Boeing_GBM.rda")
+# load("models/Boeing/Boeing_RF.rda")
+# load("models/Boeing/Boeing_SVM.rda")
+# 
+# Boeing_GBM <- GBM_model_predict
+# Boeing_RF <- RF_model_predict
+# Boeing_SVM <- SVM_model_predict
+# 
+# load("models/Google/Google_GBM.rda")
+# load("models/Google/Google_RF.rda")
+# load("models/Google/Google_SVM.rda")
+# 
+# Google_GBM <- GBM_model_predict
+# Google_RF <- RF_model_predict
+# Google_SVM <- SVM_model_predict
+# 
+# load("models/Microsoft/Microsoft_GBM.rda")
+# load("models/Microsoft/Microsoft_RF.rda")
+# load("models/Microsoft/Microsoft_SVM.rda")
+# 
+# Microsoft_GBM <- GBM_model_predict
+# Microsoft_RF <- RF_model_predict
+# Microsoft_SVM <- SVM_model_predict
+# 
+# save(
+#   Amazon_GBM, Amazon_RF, Amazon_SVM, 
+#   Apple_GBM, Apple_RF, Apple_SVM, 
+#   Boeing_GBM, Boeing_RF, Boeing_SVM, 
+#   Google_GBM, Google_RF, Google_SVM, 
+#   Microsoft_GBM, Microsoft_RF, Microsoft_SVM, 
+#   
+#   file = "models/models.Rda"
+#   
+#   )
+
 
 
 ```
+
+```{r}
+
+load("models/models.Rda")
+```
+
+
 
 ```{r}
 
@@ -36,35 +104,244 @@ p <- plot_ly(d_a, x = ~date, y = ~price, name = 'Actuals', type = 'scatter', mod
   p
 ```
 
-```{r}
-
-ticker ="APPL"
-
-xts_d <- getSymbols(ticker, auto.assign = FALSE)
-
-save(xts_d, file="data/HEI.DE.Rda")
-
-
-df_xts <- convert_xts_to_df(xts_d)
-
-head(d)
-
-```
 
 ```{r}
 
-  
-  # PLACEHOLDER for prediction function based off an XTS object
-  
-  out <- xts_d
-  
-  out <- convert_xts_to_df(out, ticker)
-  
-  l <- round(nrow(xts_d)*0.8)
-  out[l:nrow(xts_d),]$DataType = "prediction"
-  out
-  
+load_data <- function(ticker){
+  data <- getSymbols(ticker, auto.assign = FALSE)
 
+  names(data) <- c("Open","High","Low","Close","Volume","Adjusted")
+  
+  data
+  
+}
+
+prepare_xts <- function(forecast_stock_data){
+    
+  data_model <- forecast_stock_data$Close
+  
+  data_model$Close.Lag7 <- lag(forecast_stock_data$Close,7)
+  data_model$Open.Lag7 <- lag(forecast_stock_data$Open,7) 
+  data_model$High.Lag7 <- lag(forecast_stock_data$High,7) 
+  data_model$Low.Lag7<- lag(forecast_stock_data$Low,7) 
+  data_model$Volume.Lag7<- lag(forecast_stock_data$Volume,7) 
+  data_model$Adjusted.Lag7<- lag(forecast_stock_data$Adjusted,7) 
+  data_model$Close.Lag14 <- lag(forecast_stock_data$Close,14) 
+  data_model$Open.Lag14 <- lag(forecast_stock_data$Open,14) 
+  data_model$High.Lag14 <- lag(forecast_stock_data$High,14) 
+  data_model$Low.Lag14<- lag(forecast_stock_data$Low,14) 
+  data_model$Volume.Lag14<- lag(forecast_stock_data$Volume,14) 
+  data_model$Adjusted.Lag14<- lag(forecast_stock_data$Adjusted,14) 
+  data_model$Close.Lag21    <- lag(forecast_stock_data$Close,21) 
+  data_model$Open.Lag21     <- lag(forecast_stock_data$Open,21) 
+  data_model$High.Lag21     <- lag(forecast_stock_data$High,21) 
+  data_model$Low.Lag21      <- lag(forecast_stock_data$Low,21) 
+  data_model$Volume.Lag21   <- lag(forecast_stock_data$Volume,21) 
+  data_model$Adjusted.Lag21 <- lag(forecast_stock_data$Adjusted,21) 
+  data_model$Close.Lag28 <- lag(forecast_stock_data$Close,28) 
+  data_model$Open.Lag28 <- lag(forecast_stock_data$Open,28) 
+  data_model$High.Lag28 <- lag(forecast_stock_data$High,28) 
+  data_model$Low.Lag28 <- lag(forecast_stock_data$Low,28) 
+  data_model$Volume.Lag28 <- lag(forecast_stock_data$Volume,28) 
+  data_model$Adjusted.Lag28 <- lag(forecast_stock_data$Adjusted,28)
+  
+  #Create dataframe
+  df_data_model <- fortify.zoo(data_model)
+  
+  names(df_data_model)[1] <- "Date"
+  df_data_model$Date <- as.POSIXct(df_data_model$Date)
+  
+  
+  i <- seq(from=2, to=26) 
+  
+  df_data_model[ , i] <- apply(df_data_model[ , i], 2,            # Specify own function within apply
+                      function(x) as.numeric(as.character(x)))
+  
+  df_data_model$DataType <- as.vector(forecast_stock_data$DataType)
+  
+  df_data_model[is.na(df_data_model)] <- 0
+  
+  df_data_model
+
+}
+
+
+extend_xts <- function(stock_data, no_days=NA){
+  
+  if (is.na(no_days) | no_days < 0 ){
+    no_days <- 5
+  }
+  
+  v_dates_end <- seq(as.Date(end(stock_data)),
+                     by = "day",
+                     length.out = (no_days+1))[-1]
+  
+  x_expand_time_index <- xts(, order.by = c(v_dates_end))
+  
+  x <- merge(stock_data, x_expand_time_index, fill = NA)
+  x$DataType = NA
+  x$DataType = "actuals"
+  x[is.na(x$Close),]$DataType = "prediction"
+
+  x
+
+}
+
+predict_on_xts <- function(in_stock_data, no_days, ticker, model_type){
+    
+  pred_data <- tail(in_stock_data, no_days)
+  
+  print(paste0("Predict for : ", ticker, ", with model: ", model_type))
+  
+  if (ticker == "AMZN"){
+    if (model_type == "GBM"){
+        data_predict <- predict(Amazon_GBM, pred_data)
+    }else if (model_type == "RF"){
+      data_predict <- predict(Amazon_RF, pred_data)
+    }else if (model_type == "SVM"){
+      data_predict <- predict(Amazon_SVM, pred_data)
+    }else{
+      stop("Unknown model type")
+    }
+  }else if (ticker == "BA"){
+     if (model_type == "GBM"){
+        data_predict <- predict(Boeing_GBM, pred_data)
+    }else if (model_type == "RF"){
+      data_predict <- predict(Boeing_RF, pred_data)
+    }else if (model_type == "SVM"){
+      data_predict <- predict(Boeing_SVM, pred_data)
+    }else{
+      stop("Unknown model type")
+    }
+  }else if (ticker == "GOOG"){
+     if (model_type == "GBM"){
+        data_predict <- predict(Google_GBM, pred_data)
+    }else if (model_type == "RF"){
+      data_predict <- predict(Google_RF, pred_data)
+    }else if (model_type == "SVM"){
+      data_predict <- predict(Google_SVM, pred_data)
+    }else{
+      stop("Unknown model type")
+    }
+  }else if (ticker == "MSFT"){
+     if (model_type == "GBM"){
+        data_predict <- predict(Microsoft_GBM, pred_data)
+    }else if (model_type == "RF"){
+      data_predict <- predict(Microsoft_RF, pred_data)
+    }else if (model_type == "SVM"){
+      data_predict <- predict(Microsoft_SVM, pred_data)
+    }else{
+      stop("Unknown model type")
+    }
+  }else if (ticker == "APPL"){
+     if (model_type == "GBM"){
+        data_predict <- predict(Apple_GBM, pred_data)
+    }else if (model_type == "RF"){
+      data_predict <- predict(Apple_RF, pred_data)
+    }else if (model_type == "SVM"){
+      data_predict <- predict(Apple_SVM, pred_data)
+    }else{
+      stop("Unknown model type")
+    }
+  }else{
+    stop("Unknown company ticker")
+  }
+
+  
+  in_stock_data[in_stock_data$DataType == 'prediction',]$Close = data_predict
+  
+  in_stock_data
+}
+
+
+```
+
+
+
+```{r}
+
+ticker <- "AMZN"
+target_model <- "RF"
+no_days <- 30
+
+data <- load_data(ticker)
+
+now_date <- now()
+s_date <- now_date %m-% months(20)
+
+start_date <- paste(year(s_date),str_pad(month(s_date), 2, "left", "0"),str_pad(day(s_date), 2, "left", "0"), "/",sep="")
+
+data <- data[start_date]
+
+raw_data <- extend_xts(data, no_days)
+
+df_data_model <- prepare_xts(raw_data)
+
+df_data_model_pred <- predict_on_xts(in_stock_data=df_data_model, no_days=no_days, ticker=ticker, model_type=target_model)
+
+# 
+# pred_data <- tail(df_data_model, no_days)
+# 
+# 
+# data_predict_gbm <- predict(Amazon_GBM, pred_data)
+# data_predict_rf <- predict(Amazon_RF, pred_data)
+# data_predict_svm <- predict(Amazon_SVM, pred_data)
+# 
+# df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_gbm
+
+
+```
+
+
+
+```{r}
+
+
+df_res <- df_data_model_pred
+
+d_a <- df_res[df_res$DataType == 'actuals',]
+d_p <- df_res[df_res$DataType == 'prediction',]
+
+p <- plot_ly(d_a, x = ~Date, y = ~Close, name = 'Actuals', type = 'scatter', mode = 'lines', source = "subset") %>%
+  add_trace(data = d_p, y = ~Close, name = 'Prediction', mode = 'lines', line = list(color = 'rgb(205, 12, 24)', width = 2, dash = 'dash'))
+p
+```
+
+
+```{r}
+
+df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_rf
+
+df_res <- df_data_model
+
+
+
+d_a <- df_res[df_res$DataType == 'actuals',]
+d_p <- df_res[df_res$DataType == 'prediction',]
+
+
+p <- plot_ly(d_a, x = ~Date, y = ~Close, name = 'Actuals', type = 'scatter', mode = 'lines', source = "subset") %>%
+  add_trace(data = d_p, y = ~Close, name = 'Prediction', mode = 'lines', line = list(color = 'rgb(205, 12, 24)', width = 2, dash = 'dash'))
+p
+```
+
+
+
+```{r}
+
+df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_svm
+
+df_res <- df_data_model
+
+
+
+d_a <- df_res[df_res$DataType == 'actuals',]
+d_p <- df_res[df_res$DataType == 'prediction',]
+
+
+p <- plot_ly(d_a, x = ~Date, y = ~Close, name = 'Actuals', type = 'scatter', mode = 'lines', source = "subset") %>%
+  add_trace(data = d_p, y = ~Close, name = 'Prediction', mode = 'lines', line = list(color = 'rgb(205, 12, 24)', width = 2, dash = 'dash'))
+p
 ```
 
 
@@ -72,20 +349,34 @@ head(d)
 
 
 ```{r}
-
-out <- xts_d
-
-
-
-out <- convert_xts_to_df(out, ticker)
-fake <- rnorm(nrow(out), mean = mean(out$Close), sd=sd(out$Close))
-
-out$Close <- fake
-
-l <- round(nrow(xts_d)*0.8)
-out[l:nrow(xts_d),]$DataType = "prediction"
-out
+end_date = as.character(as.Date(now())+10)
+start_date = as.character(as.Date(now()))
+no_days <- as.Date(as.character(end_date), format="%Y-%m-%d")-as.Date(as.character(start_date), format="%Y-%m-%d")
 ```
+
+
+
+
+```{r}
+no_days[1]
+```
+
+```{r}
+test_file <- "report.pdf"
+base_filename <- tools::file_path_sans_ext(test_file)
+file_extension <- paste0(".", tools::file_ext(test_file))
+temp_file <- fs::file_temp(base_filename, tmp_dir = "www", file_extension)
+```
+
+
+
+
+
+
+
+
+
+
 
 
 

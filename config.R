@@ -1,5 +1,5 @@
-ticker_choices <- c("APPLE" = "APPL",
-                    "GOOGLE" = "GOOGL",
-                    "Heidelberg Zement" = "HEI.DE",
-                    "DAIMLER" = "DAIM",
-                    "SIEMENS" = "SIEGY")
+ticker_choices <- c("APPLE" = "AAPL",
+                    "GOOGLE" = "GOOG",
+                    "BOEING" = "BA",
+                    "MICROSOFT" = "MSFT",
+                    "AMAZON" = "AMZN")

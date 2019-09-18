@@ -1,8 +1,12 @@
 library(shinydashboard)
 library(plotly)
 library(quantmod)
-
+library(stringr)
+library(lubridate)
 source("config.R")
+
+date_today_str <- as.Date(now())
+default_end_date <- as.Date(now())+9
 
 dashboardPage(
   dashboardHeader(title = "Stock Prediction"),
@@ -12,13 +16,16 @@ dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
       selectInput("predictTicker", h4("TICKER:"),
                   choices = ticker_choices),
-      dateRangeInput("forecastingDates", h4("FORECASTING PERIOD:")),
+      sliderInput("displayLastMonth", h4("HISTORIC DATA (Months):"), min=3, max=40, value=10, step=1),
+      dateRangeInput("forecastingDates", h4("FORECASTING PERIOD:"), start = date_today_str, min = date_today_str, end=default_end_date),
       #checkboxInput("predSelectRecommendedModel","Use best performing model (recommended)", value=TRUE),
       radioButtons("modelTypeSelect", h4("MODEL SELECTION:"),
                    c("Auto (best performing)" = "AUTO",
                      "Random Forest" = "RF",
                      "SVM" = "SVM",
-                     "NB" = "NB")),
+                     "GBM" = "GBM")),
+      
+     
       
       # menuItem("Settings", tabName = "settings", icon = icon("gear")), 
       menuItem("Evaluation", tabName = "eval", icon = icon("search"))
@@ -42,6 +49,7 @@ dashboardPage(
               ), 
               
               fluidRow(
+                box(width=12,downloadButton("downloadData", "Download")),
                 box(width=12, dataTableOutput('outPredTable'))
               )
       ),
@@ -51,57 +59,22 @@ dashboardPage(
               menuItem("Predict", tabName = "dashboard", icon = icon("dashboard"))
       ),
       tabItem(tabName = "eval",
-              h2("GENERAL APPROACH"), 
-              fluidRow(
-                box( width=12,
-                  textOutput("txt_gen_approach")
-                )
-              ),
-              h2("DATA FOUNDATION"), 
+              h2("GENERAL APPROACH, MODELLING & DATA FOUNDATION"), 
               fluidRow(
                 box(width=3, selectInput("modEvalTicker", "TICKER:", choices=ticker_choices))
               ),
               fluidRow(
-                box( width=8,
+                box( width=12,
                      plotlyOutput("modEvalChart")
-                ), 
-                box( width=4, 
-                     textOutput("txt_mod_data_summary")
-                     )
-              ), 
+                )
+              ),
               h1("MODELLING"), 
-              h3("TRAINING"),
               fluidRow(
-                box( width=12,
-                     h4("Feature engineering"),
-                     textOutput("txt_mod_details"), 
-                     code("Code for features created")
-                )
-              ),
-              
-              h3("EVALUATION & SELECTION"),
-
-              ## THIS SECTION NEEDS TO BE CONDITIONAL UPON THE SELECTED TICKER ## 
-              
-              # GOOGL
-              
-              fluidRow(
-                box( width=12,
-                     h4("Model training & evaluation | GOOGL"),
-                     textOutput("txt_googl_mod_eval"), 
-                     code("Code for features created")
-                )
-              ),
-              
-              # APPL
-              
-              fluidRow(
-                box( width=12,
-                     h4("Model training & evaluation | GOOGL"),
-                     textOutput("txt_appl_mod_eval"), 
-                     code("Code for features created")
-                )
+                htmlOutput('pdfviewer'), 
+                p("Running the Shiny-App from within R-Studio will result in automatic download of the modelling details via a new tab. Please run via the browser.")
               )
+              
+              
       )
     )
   )
