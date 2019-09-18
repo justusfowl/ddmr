@@ -1,0 +1,210 @@
+---
+title: "Stock_Prediction"
+author: "Saurav Mukherjee"
+date: "9/12/2019"
+output: html_document
+---
+# Assignment Objective
+For this Predictive Portion, we have considered, Boeing (BA) as a sample stock and we have considered Support Vector Machine (SVM), Random Forest (RF) and Gradient Boosting Model (GBM) as predictive models. The reason behind choosing these models is that, these models work well for non linear response variable and the stock closing price ( which we are trying to predeict) is highly non linear in nature
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+# Install Required Packages
+ packages <- c("readxl", "dplyr", "ggplot2", "data.table", "scales", "cowplot", "grid", "gridExtra", "RColorBrewer", "knitr", "tibble", "tidyr", "png", "imager", "latexpdf", "tinytex", "maps", "ggmap", "devtools", "chron", "kableExtra", "datasets", "curl", "httr", "forcats","ROCR", "performanceEstimation", "UBL", "quantmod", "earth","e1071", "xts", "TTR","devtools","randomForest", "nnet", "DMwR2","gbm")
+  if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
+  install.packages(setdiff(packages, rownames(installed.packages()))) 
+}
+# Load library packages
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(scales)
+library(cowplot)
+library(grid)
+library(gridExtra)
+library(RColorBrewer)
+library(knitr)
+library(tibble)
+library(tidyr)
+library(png)
+library(imager)
+library(latexpdf)
+library(tinytex)
+library(maps)
+library(ggmap)
+library(devtools)
+library(chron)
+library(kableExtra)
+library(datasets)
+library(curl)
+library(httr)
+library(forcats)
+library(ROCR)
+library(performanceEstimation)
+library(UBL)
+library(quantmod)
+library(earth)
+library(e1071)
+library(xts)
+library(TTR)
+library(devtools)
+library(randomForest)
+library(nnet)
+library(DMwR2)
+library(gbm)
+install_github("ltorgo/performanceEstimation",ref="develop")
+```
+# Pre Processing Steps 
+```{r Select stock, message=FALSE, error=FALSE, echo=TRUE, include=TRUE}
+# Get data for stock details from 1990-01-01 to latest close
+BA <- getSymbols("BA",from="1990-01-01",auto.assign=FALSE)
+stock_data<- BA 
+stock_name<- "BA" 
+#Change the column names
+names(stock_data) <-c("Open","High","Low","Close","Volume","Adjusted")
+```
+
+```{r Adding forecast days, message=FALSE, error=FALSE, echo=TRUE, include=TRUE}
+# Latest date in the stock
+stock_last_date<-index(stock_data)[nrow(stock_data)] 
+#Create forecasted data
+next_days<- xts(1:7,stock_last_date+1:7)
+next_5wkdays<-next_days[.indexwday(next_days) %in% 1:5] # Get next 5 days for weekdays 
+#Merge the data
+forecast_stock_data <- merge(x = next_5wkdays, y = stock_data)
+forecast_stock_data <- forecast_stock_data[,2:7]
+```
+The Stock Detail has the following information for each trading day: Open Price, Close Price, High Price, Low Price, Volume and Adjusted. Since it is a time series data we suspect that there would auto correlation. To minimize the effect of auto correlation, we have introduced lag variables for last 7, 14, 21 and 28 days.Note we are tryng to predict the closing price of the stock for the next 5 trading days 
+```{r Add lag indicators, message=FALSE, error=FALSE, echo=TRUE, include=TRUE}
+data_model <- forecast_stock_data$Close
+data_model$Close.Lag7 <- lag(forecast_stock_data$Close,7) 
+data_model$Open.Lag7 <- lag(forecast_stock_data$Open,7) 
+data_model$High.Lag7 <- lag(forecast_stock_data$High,7) 
+data_model$Low.Lag7<- lag(forecast_stock_data$Low,7) 
+data_model$Volume.Lag7<- lag(forecast_stock_data$Volume,7) 
+data_model$Adjusted.Lag7<- lag(forecast_stock_data$Adjusted,7) 
+data_model$Close.Lag14 <- lag(forecast_stock_data$Close,14) 
+data_model$Open.Lag14 <- lag(forecast_stock_data$Open,14) 
+data_model$High.Lag14 <- lag(forecast_stock_data$High,14) 
+data_model$Low.Lag14<- lag(forecast_stock_data$Low,14) 
+data_model$Volume.Lag14<- lag(forecast_stock_data$Volume,14) 
+data_model$Adjusted.Lag14<- lag(forecast_stock_data$Adjusted,14) 
+data_model$Close.Lag21    <- lag(forecast_stock_data$Close,21) 
+data_model$Open.Lag21     <- lag(forecast_stock_data$Open,21) 
+data_model$High.Lag21     <- lag(forecast_stock_data$High,21) 
+data_model$Low.Lag21      <- lag(forecast_stock_data$Low,21) 
+data_model$Volume.Lag21   <- lag(forecast_stock_data$Volume,21) 
+data_model$Adjusted.Lag21 <- lag(forecast_stock_data$Adjusted,21) 
+data_model$Close.Lag28 <- lag(forecast_stock_data$Close,28) 
+data_model$Open.Lag28 <- lag(forecast_stock_data$Open,28) 
+data_model$High.Lag28 <- lag(forecast_stock_data$High,28) 
+data_model$Low.Lag28 <- lag(forecast_stock_data$Low,28) 
+data_model$Volume.Lag28 <- lag(forecast_stock_data$Volume,28) 
+data_model$Adjusted.Lag28 <- lag(forecast_stock_data$Adjusted,28)
+data_model[is.na(data_model)] <- 0
+#Create dataframe
+df_data_model <- fortify.zoo(data_model)
+names(df_data_model)[1] <- "date"
+df_data_model[is.na(df_data_model)] <- 0
+```
+```{r General model, message=FALSE, error=FALSE, echo=TRUE, include=TRUE}
+#Generalized predictive model function
+model_form <- Close ~     Close.Lag7 + Open.Lag7 +  High.Lag7 + Low.Lag7 + Volume.Lag7 + Adjusted.Lag7 + 
+                          Close.Lag14 + Open.Lag14 + High.Lag14 + Low.Lag14 + Volume.Lag14 +Adjusted.Lag14 +
+                          Close.Lag21 + Open.Lag21 + High.Lag21 + Low.Lag21 + Volume.Lag21 +Adjusted.Lag21 +
+                          Close.Lag28 + Open.Lag28 + High.Lag28 + Low.Lag28 + Volume.Lag28 +Adjusted.Lag28 
+```
+We have close to 30 years of test data starting from 1st Jan 1990. We are making the Training to Test split as 9:1. Meaning we will train our models (SVM, RF and GBM) on 27 years of training data and validate the models (SVM, RF and GBM) on 3 years of data.
+```{r Training and validation periods, echo=TRUE, include=TRUE}
+training_start_date <-'1990-01-01'
+training_end_date <-'2016-12-31'
+validation_start_date <-'2017-01-01'
+validation_end_date <- as.character(index(data_model)[nrow(data_model)])
+train.window=c(training_start_date,training_end_date)
+validation.window=c(validation_start_date,validation_end_date)
+# Training dataset
+training_data <- na.omit(df_data_model[df_data_model$date >= training_start_date & df_data_model$date <= training_end_date,])
+# Validation dataset
+validation_data <- na.omit(df_data_model[df_data_model$date >= validation_start_date & df_data_model$date <= validation_end_date,])
+```
+Our results provide Model 2 as the best option.
+
+We select the parameters from the best workflow with the lowest mse, mae, rmse values and use that variant to train
+```{r Select and build SVM predictive model}
+best_cost=5
+best_gamma=0.01
+SVM_model_predict <- svm(model_form,training_data,cost=best_cost,gamma=best_gamma)
+summary(SVM_model_predict)
+save(SVM_model_predict, file = "Microsoft_SVM.rda")
+```
+We select the parameters from the best workflow with the lowest mse, mae, rmse values and use that variant to train.
+```{r Select and build RF predictive model}
+best_ntree=15
+RF_model_predict <- randomForest(model_form,training_data,penalty=best_ntree)
+summary(RF_model_predict)
+save(RF_model_predict, file = "Microsoft_RF.rda")
+```
+We select the parameters from the best workflow with the lowest mse, mae, rmse values and use that variant to train. We use 50 trees. 
+```{r Select and build GBM predictive model}
+best_ntree_gbm = 50
+best_cv_fold = 5
+GBM_model_predict <- gbm(model_form,data = training_data, n.trees = best_ntree_gbm, cv.folds = best_cv_fold  )
+summary(GBM_model_predict)
+save(GBM_model_predict, file = "Microsoft_GBM.rda")
+```
+
+```{r}
+validation_data1<-validation_data
+```
+Apply the trained model on the validation data 
+```{r}
+# SVM
+data_predict_SVM <- predict(SVM_model_predict, validation_data)
+validation_data1$df_forecast_data_SVM<-data_predict_SVM
+# RF 
+data_predict_RF <- predict(RF_model_predict, validation_data)
+validation_data1$df_forecast_data_RF<-data_predict_RF
+# GBM 
+data_predict_GBM <- predict(GBM_model_predict, validation_data)
+validation_data1$df_forecast_data_GBM <-data_predict_GBM
+validation_data1<-as.xts(validation_data1, as.Date(validation_data1$date, format='%Y/%M/%d'))
+```
+
+```{r Prediction Function}
+forecast_chart <- function(model_predict, model_name){
+  data_predict <- predict(model_predict, validation_data)
+  chart_data <- merge.xts(validation_data1$Close,data_predict)
+  colnames(chart_data$Close) <- "Actual"
+  colnames(chart_data$data_predict) <- "Predicted"
+  
+  #Plot chart
+  plot.xts(chart_data, col=c("green","blue"),legend.loc="topright",
+           main=paste0(stock_name," closing price using ",model_name, " model"))
+  
+   }
+```
+
+```{r Plot Charts, echo=TRUE, include=TRUE}
+# Plot charts
+forecast_chart(SVM_model_predict,"SVM")
+forecast_chart(RF_model_predict, "Random Forest")
+forecast_chart(GBM_model_predict,"Gradient Boosting")
+```
+
+```{r}
+forecast_table <- function(model_predict,model_name){
+  data_predict <- predict(model_predict, validation_data)
+  chart_data <- merge.xts(validation_data1$Close,data_predict)
+  colnames(chart_data$Close) <- "Actual"
+  colnames(chart_data$data_predict) <- "Predicted"
+    forecast_next_five_days_data <- fortify.zoo(chart_data)
+  tail(forecast_next_five_days_data,n=5) %>% view()
+  
+  }
+```
+
+```{r}
+forecast_table(SVM_model_predict)
+forecast_table(RF_model_predict)
+forecast_table(GBM_model_predict)
+```
