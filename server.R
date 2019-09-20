@@ -1,9 +1,6 @@
-library(shinydashboard)
-library(plotly)
-library(dplyr)
-library(stringr)
-library(fs)
-library(lubridate)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(shinydashboard, plotly, fs, dplyr, stringr, lubridate, fs)
 
 source("helper.R")
 source("config.R")

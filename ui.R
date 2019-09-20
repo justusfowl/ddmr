@@ -1,9 +1,6 @@
-library(shinydashboard)
-library(plotly)
-library(quantmod)
-library(stringr)
-library(lubridate)
-library(shinycssloaders)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(shinydashboard, plotly, quantmod, stringr, lubridate, shinycssloaders)
 
 source("config.R")
 

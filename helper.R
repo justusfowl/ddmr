@@ -1,14 +1,5 @@
-library(tibble)
-library(quantmod)
-library(gbm)
-library(dplyr)
-library(plotly)
-library(lubridate)
-library(stringr)
-library(randomForest)
-library(e1071)
-library(fs)
-library(earth)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tibble, quantmod, gbm, dplyr, plotly, lubridate, stringr, randomForest, e1071, fs, earth)
 
 load("models/models.Rda")
 
