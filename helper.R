@@ -8,6 +8,7 @@ library(stringr)
 library(randomForest)
 library(e1071)
 library(fs)
+library(earth)
 
 load("models/models.Rda")
 
@@ -145,50 +146,50 @@ predict_on_xts <- function(in_stock_data, no_days, ticker, model_type){
   print(paste0("Predict for : ", ticker, ", with model: ", model_type))
   
   if (ticker == "AMZN"){
-    if (model_type == "GBM"){
-      data_predict <- predict(Amazon_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Amazon_RF, pred_data)
+    if (model_type == "LM"){
+      data_predict <- predict(Amazon_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Amazon_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Amazon_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "BA"){
-    if (model_type == "GBM"){
-      data_predict <- predict(Boeing_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Boeing_RF, pred_data)
+    if (model_type == "LM"){
+      data_predict <- predict(Boeing_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Boeing_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Boeing_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "GOOG"){
-    if (model_type == "GBM"){
-      data_predict <- predict(Google_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Google_RF, pred_data)
+    if (model_type == "LM"){
+      data_predict <- predict(Google_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Google_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Google_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "MSFT"){
-    if (model_type == "GBM"){
-      data_predict <- predict(Microsoft_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Microsoft_RF, pred_data)
+    if (model_type == "LM"){
+      data_predict <- predict(Microsoft_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Microsoft_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Microsoft_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "AAPL"){
-    if (model_type == "GBM"){
-      data_predict <- predict(Apple_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Apple_RF, pred_data)
+    if (model_type == "LM"){
+      data_predict <- predict(Apple_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Apple_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Apple_SVM, pred_data)
     }else{

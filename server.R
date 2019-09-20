@@ -19,11 +19,11 @@ df_model_results <- read.csv("models.csv")
 # func to predict closing prices for given timeframe
 
 # no_days -> number of days for which the prediction should be undertaken 
-predict_data <- function(ticker="", target_model, no_days=10, no_back_months=20){
+predict_data <- function(ticker="", target_model, no_days=6, no_back_months=20){
   
   if (ticker == "DEFAULT"){
     ticker <- "AMZN"
-    target_model <- "RF"
+    target_model <- "LM"
   }
   
   data <- load_data(ticker)
@@ -217,7 +217,7 @@ server <- function(input, output) {
   
   output$pdfviewer <- renderText({
     
-    url <- paste0("EVAL_", input$modEvalTicker, ".pdf")
+    url <- paste0("Stock_Prediction_", input$modEvalTicker, "--Updated.pdf")
     return(paste('<iframe style="height:600px; width:100%" src="', url, '"></iframe>', sep = ""))
   })
   

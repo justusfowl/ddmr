@@ -1,6 +1,6 @@
 Ticker,ModelType,ModelPath,ModelAccuracyMetric,ModelAccuracyMetricFormat,ModelAccuracy
-AAPL,RF,AAPL_RANDFOR.Rdata,MAPE,perc,0.12
+AAPL,LM,AAPL_RANDFOR.Rdata,MAPE,perc,0.12
 GOOG,SVM,APPL_RANDFOR.Rdata,MAPE,perc,0.54
-BA,GBM,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
-MSFT,RF,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
+BA,MARS,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
+MSFT,LM,APPL_RANDFOR.Rdata,MAPE,perc,0.2321
 AMZN,SVM,APPL_RANDFOR.Rdata,MAPE,perc,0.2321

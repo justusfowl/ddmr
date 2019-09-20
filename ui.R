@@ -3,10 +3,12 @@ library(plotly)
 library(quantmod)
 library(stringr)
 library(lubridate)
+library(shinycssloaders)
+
 source("config.R")
 
 date_today_str <- as.Date(now())
-default_end_date <- as.Date(now())+9
+default_end_date <- as.Date(now())+5
 
 dashboardPage(
   dashboardHeader(title = "Stock Prediction"),
@@ -21,9 +23,9 @@ dashboardPage(
       #checkboxInput("predSelectRecommendedModel","Use best performing model (recommended)", value=TRUE),
       radioButtons("modelTypeSelect", h4("MODEL SELECTION:"),
                    c("Auto (best performing)" = "AUTO",
-                     "Random Forest" = "RF",
+                     "Linear Regression" = "LM",
                      "SVM" = "SVM",
-                     "GBM" = "GBM")),
+                     "MARS" = "MARS")),
       
      
       
@@ -45,7 +47,7 @@ dashboardPage(
               ),
              
               fluidRow(
-                box(width=12, plotlyOutput("predictChartLy"))
+                box(width=12, withSpinner(plotlyOutput("predictChartLy")))
               ), 
               
               fluidRow(

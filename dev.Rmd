@@ -7,7 +7,6 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-load("data/testDF.Rda")
 
 library(tibble)
 
@@ -24,62 +23,66 @@ library(e1071)
 library(fs)
 
 
-df_pred_data <- testDF
-# 
-# load("models/Amazon/Amazon_GBM.rda")
-# load("models/Amazon/Amazon_RF.rda")
-# load("models/Amazon/Amazon_SVM.rda")
-# 
-# Amazon_GBM <- GBM_model_predict
-# Amazon_RF <- RF_model_predict
-# Amazon_SVM <- SVM_model_predict
-# 
-# load("models/Apple/Apple_GBM.rda")
-# load("models/Apple/Apple_RF.rda")
-# load("models/Apple/Apple_SVM.rda")
-# 
-# Apple_GBM <- GBM_model_predict
-# Apple_RF <- RF_model_predict
-# Apple_SVM <- SVM_model_predict
-# 
-# load("models/Boeing/Boeing_GBM.rda")
-# load("models/Boeing/Boeing_RF.rda")
-# load("models/Boeing/Boeing_SVM.rda")
-# 
-# Boeing_GBM <- GBM_model_predict
-# Boeing_RF <- RF_model_predict
-# Boeing_SVM <- SVM_model_predict
-# 
-# load("models/Google/Google_GBM.rda")
-# load("models/Google/Google_RF.rda")
-# load("models/Google/Google_SVM.rda")
-# 
-# Google_GBM <- GBM_model_predict
-# Google_RF <- RF_model_predict
-# Google_SVM <- SVM_model_predict
-# 
-# load("models/Microsoft/Microsoft_GBM.rda")
-# load("models/Microsoft/Microsoft_RF.rda")
-# load("models/Microsoft/Microsoft_SVM.rda")
-# 
-# Microsoft_GBM <- GBM_model_predict
-# Microsoft_RF <- RF_model_predict
-# Microsoft_SVM <- SVM_model_predict
-# 
-# save(
-#   Amazon_GBM, Amazon_RF, Amazon_SVM, 
-#   Apple_GBM, Apple_RF, Apple_SVM, 
-#   Boeing_GBM, Boeing_RF, Boeing_SVM, 
-#   Google_GBM, Google_RF, Google_SVM, 
-#   Microsoft_GBM, Microsoft_RF, Microsoft_SVM, 
-#   
-#   file = "models/models.Rda"
-#   
-#   )
+```
+
+```{r}
+
+ load("models/Amazon/Amazon_LM.rda")
+ load("models/Amazon/Amazon_MARS.rda")
+ load("models/Amazon/Amazon_SVM.rda")
+
+ Amazon_LM <- LM_model_predict
+ Amazon_MARS <- MARS_model_predict
+ Amazon_SVM <- SVM_model_predict
+
+ load("models/Apple/Apple_LM.rda")
+ load("models/Apple/Apple_MARS.rda")
+ load("models/Apple/Apple_SVM.rda")
+
+ Apple_LM <- LM_model_predict
+ Apple_MARS <- MARS_model_predict
+ Apple_SVM <- SVM_model_predict
+
+ load("models/Boeing/Boeing_LM.rda")
+ load("models/Boeing/Boeing_MARS.rda")
+ load("models/Boeing/Boeing_SVM.rda")
+
+ Boeing_LM <- LM_model_predict
+ Boeing_MARS <- MARS_model_predict
+ Boeing_SVM <- SVM_model_predict
+
+ load("models/Google/Google_LM.rda")
+ load("models/Google/Google_MARS.rda")
+ load("models/Google/Google_SVM.rda")
+
+ Google_LM <- LM_model_predict
+ Google_MARS <- MARS_model_predict
+ Google_SVM <- SVM_model_predict
+
+ load("models/Microsoft/Microsoft_LM.rda")
+ load("models/Microsoft/Microsoft_MARS.rda")
+ load("models/Microsoft/Microsoft_SVM.rda")
+
+ Microsoft_LM <- LM_model_predict
+ Microsoft_MARS <- MARS_model_predict
+ Microsoft_SVM <- SVM_model_predict
+
+ save(
+   Amazon_LM, Amazon_MARS, Amazon_SVM,
+   Apple_LM, Apple_MARS, Apple_SVM,
+   Boeing_LM, Boeing_MARS, Boeing_SVM,
+   Google_LM, Google_MARS, Google_SVM,
+   Microsoft_LM, Microsoft_MARS, Microsoft_SVM,
+
+   file = "models/models.Rda"
+
+   )
 
 
 
 ```
+
+
 
 ```{r}
 
@@ -194,50 +197,50 @@ predict_on_xts <- function(in_stock_data, no_days, ticker, model_type){
   print(paste0("Predict for : ", ticker, ", with model: ", model_type))
   
   if (ticker == "AMZN"){
-    if (model_type == "GBM"){
-        data_predict <- predict(Amazon_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Amazon_RF, pred_data)
+    if (model_type == "LM"){
+        data_predict <- predict(Amazon_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Amazon_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Amazon_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "BA"){
-     if (model_type == "GBM"){
-        data_predict <- predict(Boeing_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Boeing_RF, pred_data)
+     if (model_type == "LM"){
+        data_predict <- predict(Boeing_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Boeing_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Boeing_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "GOOG"){
-     if (model_type == "GBM"){
-        data_predict <- predict(Google_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Google_RF, pred_data)
+     if (model_type == "LM"){
+        data_predict <- predict(Google_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Google_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Google_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "MSFT"){
-     if (model_type == "GBM"){
-        data_predict <- predict(Microsoft_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Microsoft_RF, pred_data)
+     if (model_type == "LM"){
+        data_predict <- predict(Microsoft_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Microsoft_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Microsoft_SVM, pred_data)
     }else{
       stop("Unknown model type")
     }
   }else if (ticker == "APPL"){
-     if (model_type == "GBM"){
-        data_predict <- predict(Apple_GBM, pred_data)
-    }else if (model_type == "RF"){
-      data_predict <- predict(Apple_RF, pred_data)
+     if (model_type == "LM"){
+        data_predict <- predict(Apple_LM, pred_data)
+    }else if (model_type == "MARS"){
+      data_predict <- predict(Apple_MARS, pred_data)
     }else if (model_type == "SVM"){
       data_predict <- predict(Apple_SVM, pred_data)
     }else{
@@ -261,7 +264,7 @@ predict_on_xts <- function(in_stock_data, no_days, ticker, model_type){
 ```{r}
 
 ticker <- "AMZN"
-target_model <- "RF"
+target_model <- "MARS"
 no_days <- 30
 
 data <- load_data(ticker)
@@ -283,11 +286,11 @@ df_data_model_pred <- predict_on_xts(in_stock_data=df_data_model, no_days=no_day
 # pred_data <- tail(df_data_model, no_days)
 # 
 # 
-# data_predict_gbm <- predict(Amazon_GBM, pred_data)
-# data_predict_rf <- predict(Amazon_RF, pred_data)
+# data_predict_LM <- predict(Amazon_LM, pred_data)
+# data_predict_MARS <- predict(Amazon_MARS, pred_data)
 # data_predict_svm <- predict(Amazon_SVM, pred_data)
 # 
-# df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_gbm
+# df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_LM
 
 
 ```
@@ -310,7 +313,7 @@ p
 
 ```{r}
 
-df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_rf
+df_data_model[df_data_model$DataType == 'prediction',]$Close = data_predict_MARS
 
 df_res <- df_data_model
 
